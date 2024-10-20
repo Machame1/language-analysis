@@ -9,7 +9,7 @@
     <h1>Result</h1>
     <ul>
         {% for sentence, sentiment in results %}
-            <li>{{ sentence }} - Sentiment: {{ 'Positive' if sentiment > 0 else 'Negative' if sentiment < 0 else 'Neutral' }}</li>
+        <li>{{ sentence }} - Sentiment: {{ 'Positive' if sentiment | float > 0 else 'Negative' if sentiment | float < 0 else 'Neutral' }}</li>
         {% endfor %}
     </ul>
     <a href="/">Upload Another Document</a>
