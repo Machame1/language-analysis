@@ -1,3 +1,4 @@
+<!-- summary.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,21 +7,25 @@
     <title>Summary</title>
 </head>
 <body>
-    <h1>Summary</h1>
+    <h1>Summary for: {{ filename }}</h1>
+
+    <!-- Display the summary -->
+    <p><strong>Summary:</strong></p>
     <p>{{ summary }}</p>
-    <form action="" method="post">
-        <label for="language">Choose Language for Summary:</label>
-        <select name="language" id="language">
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="te">Telugu</option>
-            <option value="de">German</option>
-            <option value="fr">French</option>
+
+    <!-- Form to translate the summary -->
+    <form action="{{ url_for('summarize_route', filename=filename) }}" method="POST">
+        <label for="language">Translate summary to:</label>
+        <select name="language" id="language" required>
             <option value="es">Spanish</option>
-            <!-- Add more languages as needed -->
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="zh-cn">Chinese (Simplified)</option>
+            <!-- Add more language options as needed -->
         </select>
-        <button type="submit">Translate Summary</button>
+        <button type="submit">Translate</button>
     </form>
-    <a href="/">Upload Another Document</a>
+
+    <a href="{{ url_for('index') }}">Go back</a>
 </body>
 </html>

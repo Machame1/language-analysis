@@ -1,17 +1,22 @@
+<!-- result.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Result</title>
+    <title>Results</title>
 </head>
 <body>
-    <h1>Result</h1>
+    <h1>Results for: {{ filename }}</h1>
+
+    <!-- Loop through the results to display them -->
     <ul>
-        {% for sentence, sentiment in results %}
-        <li>{{ sentence }} - Sentiment: {{ 'Positive' if sentiment | float > 0 else 'Negative' if sentiment | float < 0 else 'Neutral' }}</li>
+        {% for label, result in results %}
+        <li><strong>{{ label }}:</strong> {{ result }}</li>
         {% endfor %}
     </ul>
-    <a href="/">Upload Another Document</a>
+
+    <a href="{{ url_for('index') }}">Go back</a>
+    <a href="{{ url_for('upload_success', filename=filename) }}">Go back to actions</a>
 </body>
 </html>
