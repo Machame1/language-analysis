@@ -1,22 +1,25 @@
-<!-- result.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
+    <title>Analysis Result</title>
 </head>
 <body>
-    <h1>Results for: {{ filename }}</h1>
-
-    <!-- Loop through the results to display them -->
+    <h1>Analysis Result for {{ filename }}</h1>
+    
+    {% for label, value in results %}
+        <h2>{{ label }}</h2>
+        <p>{{ value }}</p>
+    {% endfor %}
+    
+    <h2>Cleaned Text Sentences</h2>
     <ul>
-        {% for label, result in results %}
-        <li><strong>{{ label }}:</strong> {{ result }}</li>
+        {% for sentence in cleaned_sentences %}
+            <li>{{ sentence }}</li>
         {% endfor %}
     </ul>
-
-    <a href="{{ url_for('index') }}">Go back</a>
-    <a href="{{ url_for('upload_success', filename=filename) }}">Go back to actions</a>
+    
+    <a href="{{ url_for('index') }}">Go Back</a>
 </body>
 </html>

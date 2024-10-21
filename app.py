@@ -8,20 +8,18 @@ import nltk
 from googletrans import Translator
 from pptx import Presentation
 
-# Download NLTK data files
 nltk.download('punkt')
 nltk.download('stopwords')
 
 app = Flask(__name__)
 translator = Translator()
 
-# Function to read text from different file formats
 def read_text_from_pdf(file_path):
     text = ''
     with open(file_path, 'rb') as file:
         reader = PyPDF2.PdfReader(file)
         for page in reader.pages:
-            text += page.extract_text() or ''  # Handle None case
+            text += page.extract_text() or '' 
     return text
 
 def read_text_from_docx(file_path):
@@ -44,18 +42,14 @@ def read_text_from_pptx(file_path):
                 slide_text += shape.text + "\n"
         text += slide_text + "\n"
     return text
-
-# Function to remove noise from text
 def remove_noise(text):
     return re.sub(r'[^\w\s]', '', text.lower())
 
-# Function to calculate overall sentiment
 def overall_sentiment(text):
     cleaned_text = remove_noise(text)
     analysis = TextBlob(cleaned_text)
     polarity = analysis.sentiment.polarity
     
-    # Classify based on overall polarity
     if polarity > 0:
         sentiment_label = 'Positive'
     elif polarity < 0:
@@ -65,7 +59,6 @@ def overall_sentiment(text):
     
     return sentiment_label
 
-# Function to classify the document into relevant categories
 def classify_document(text):
     categories = {
         'health': ['health', 'doctor', 'hospital', 'disease', 'medicine'],
@@ -73,16 +66,13 @@ def classify_document(text):
         'finance': ['bank', 'finance', 'loan', 'investment', 'stock'],
         'legal': ['court', 'law', 'judge', 'legal', 'contract'],
         'education': ['school', 'university', 'education', 'teacher', 'student'],
-        # Add more categories as needed
     }
 
     for category, keywords in categories.items():
         if any(keyword in text.lower() for keyword in keywords):
             return category
 
-    return None  # If no category matched, the document is irrelevant
-
-# Function to summarize text into 10 lines
+    return None  
 def summarize_text_to_10_lines(text):
     sentences = nltk.sent_tokenize(text)
     document_category = classify_document(text)
@@ -91,11 +81,10 @@ def summarize_text_to_10_lines(text):
     else:
         summary = "The document does not belong to a recognized category.\n"
     
-    summary += " ".join(sentences[:10])  # Limit to first 10 sentences
+    summary += " ".join(sentences[:10]) 
     
     return summary
 
-# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -108,9 +97,20 @@ def upload_file():
     file = request.files['file']
     
     if file:
+        # Ensure the uploads directory exists
+        os.makedirs('uploads', exist_ok=True)
+
+        # Define the path where the file will be saved
         file_path = os.path.join('uploads', file.filename)
+
+        # Save the file
         file.save(file_path)
+        
+        # Redirect to the process_file route to handle the uploaded file
         return redirect(url_for('process_file', filename=file.filename))
+    
+    return "No file uploaded", 400  # Handle cases where no file is uploaded
+
 
 @app.route('/process/<filename>')
 def process_file(filename):
@@ -153,7 +153,11 @@ def remove_noise_route(filename):
 
     cleaned_text = remove_noise(text)
     sentiment_label = overall_sentiment(cleaned_text)
-    return render_template('result.html', results=[("Cleaned Text Sentiment", sentiment_label)], filename=filename)
+    
+    cleaned_sentences = nltk.sent_tokenize(cleaned_text)
+    
+    return render_template('result.html', results=[("Cleaned Text Sentiment", sentiment_label)], cleaned_sentences=cleaned_sentences, filename=filename)
+
 
 @app.route('/summary/<filename>', methods=['GET', 'POST'])
 def summarize_route(filename):
