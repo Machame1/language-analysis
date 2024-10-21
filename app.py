@@ -24,13 +24,11 @@ def read_text_from_pdf(file_path):
 
 def read_text_from_docx(file_path):
     doc = docx.Document(file_path)
-    text = '\n'.join([para.text for para in doc.paragraphs])
-    return text
+    return '\n'.join([para.text for para in doc.paragraphs])
 
 def read_text_from_txt(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
-        text = file.read()
-    return text
+        return file.read()
 
 def read_text_from_pptx(file_path):
     text = ''
@@ -42,6 +40,7 @@ def read_text_from_pptx(file_path):
                 slide_text += shape.text + "\n"
         text += slide_text + "\n"
     return text
+
 def remove_noise(text):
     return re.sub(r'[^\w\s]', '', text.lower())
 
@@ -49,41 +48,11 @@ def overall_sentiment(text):
     cleaned_text = remove_noise(text)
     analysis = TextBlob(cleaned_text)
     polarity = analysis.sentiment.polarity
-    
-    if polarity > 0:
-        sentiment_label = 'Positive'
-    elif polarity < 0:
-        sentiment_label = 'Negative'
-    else:
-        sentiment_label = 'Neutral'
-    
-    return sentiment_label
+    return 'Positive' if polarity > 0 else 'Negative' if polarity < 0 else 'Neutral'
 
-def classify_document(text):
-    categories = {
-        'health': ['health', 'doctor', 'hospital', 'disease', 'medicine'],
-        'crime': ['crime', 'police', 'robbery', 'assault', 'murder'],
-        'finance': ['bank', 'finance', 'loan', 'investment', 'stock'],
-        'legal': ['court', 'law', 'judge', 'legal', 'contract'],
-        'education': ['school', 'university', 'education', 'teacher', 'student'],
-    }
-
-    for category, keywords in categories.items():
-        if any(keyword in text.lower() for keyword in keywords):
-            return category
-
-    return None  
 def summarize_text_to_10_lines(text):
     sentences = nltk.sent_tokenize(text)
-    document_category = classify_document(text)
-    if document_category:
-        summary = f"The document is related to {document_category}.\n"
-    else:
-        summary = "The document does not belong to a recognized category.\n"
-    
-    summary += " ".join(sentences[:10]) 
-    
-    return summary
+    return " ".join(sentences[:10])  # Summarize to first 10 lines
 
 @app.route('/')
 def index():
@@ -97,76 +66,71 @@ def upload_file():
     file = request.files['file']
     
     if file:
-        # Ensure the uploads directory exists
         os.makedirs('uploads', exist_ok=True)
-
-        # Define the path where the file will be saved
         file_path = os.path.join('uploads', file.filename)
-
-        # Save the file
         file.save(file_path)
-        
-        # Redirect to the process_file route to handle the uploaded file
-        return redirect(url_for('process_file', filename=file.filename))
+        return redirect(url_for('upload_success', filename=file.filename))
     
-    return "No file uploaded", 400  # Handle cases where no file is uploaded
-
-
-@app.route('/process/<filename>')
-def process_file(filename):
-    file_path = os.path.join('uploads', filename)
-    
-    if filename.endswith('.pdf'):
-        text = read_text_from_pdf(file_path)
-    elif filename.endswith('.docx'):
-        text = read_text_from_docx(file_path)
-    elif filename.endswith('.txt'):
-        text = read_text_from_txt(file_path)
-    elif filename.endswith('.pptx'):
-        text = read_text_from_pptx(file_path)
-    else:
-        return "Unsupported file format"
-    
-    return redirect(url_for('upload_success', filename=filename))
+    return "No file uploaded", 400
 
 @app.route('/upload_success/<filename>')
 def upload_success(filename):
-    return render_template('success.html', filename=filename)
+    file_path = os.path.join('uploads', filename)
+    text = read_text_from_pdf(file_path) if filename.endswith('.pdf') else \
+           read_text_from_docx(file_path) if filename.endswith('.docx') else \
+           read_text_from_txt(file_path) if filename.endswith('.txt') else \
+           read_text_from_pptx(file_path)
+
+    initial_content = text[:300]
+    remaining_content = text[300:] if len(text) > 300 else ""
+
+    return render_template('success_view.html', initial_content=initial_content, remaining_content=remaining_content, filename=filename)
 
 @app.route('/analyze/<filename>')
 def analyze_sentiment_route(filename):
     file_path = os.path.join('uploads', filename)
-    text = read_text_from_pdf(file_path) if filename.endswith('.pdf') else read_text_from_docx(file_path) if filename.endswith('.docx') else read_text_from_txt(file_path) if filename.endswith('.txt') else read_text_from_pptx(file_path)
-
-    document_category = classify_document(text)
-    if not document_category:
-        return "Access Denied: Document not related to any relevant categories (e.g., health, crime, finance, legal, education)."
+    text = read_text_from_pdf(file_path) if filename.endswith('.pdf') else \
+           read_text_from_docx(file_path) if filename.endswith('.docx') else \
+           read_text_from_txt(file_path) if filename.endswith('.txt') else \
+           read_text_from_pptx(file_path)
 
     sentiment_label = overall_sentiment(text)
 
-    return render_template('result.html', results=[("Overall Sentiment", sentiment_label)], filename=filename)
+    initial_content = text[:300]
+    remaining_content = text[300:] if len(text) > 300 else ""
+    
+    return render_template('result.html', results=[("Overall Sentiment", sentiment_label)],
+                           filename=filename,
+                          
+                           initial_content=initial_content,
+                           remaining_content=remaining_content)
 
 @app.route('/remove_noise/<filename>')
 def remove_noise_route(filename):
     file_path = os.path.join('uploads', filename)
-    text = read_text_from_pdf(file_path) if filename.endswith('.pdf') else read_text_from_docx(file_path) if filename.endswith('.docx') else read_text_from_txt(file_path) if filename.endswith('.txt') else read_text_from_pptx(file_path)
+    text = read_text_from_pdf(file_path) if filename.endswith('.pdf') else \
+           read_text_from_docx(file_path) if filename.endswith('.docx') else \
+           read_text_from_txt(file_path) if filename.endswith('.txt') else \
+           read_text_from_pptx(file_path)
 
     cleaned_text = remove_noise(text)
     sentiment_label = overall_sentiment(cleaned_text)
     
-    cleaned_sentences = nltk.sent_tokenize(cleaned_text)
+    initial_content = text[:300]
+    remaining_content = text[300:] if len(text) > 300 else ""
     
-    return render_template('result.html', results=[("Cleaned Text Sentiment", sentiment_label)], cleaned_sentences=cleaned_sentences, filename=filename)
-
+    return render_template('result.html', 
+                           results=[("Cleaned Text Sentiment", sentiment_label)],
+                           filename=filename,   
+                           cleaned_content=cleaned_text,)
 
 @app.route('/summary/<filename>', methods=['GET', 'POST'])
 def summarize_route(filename):
     file_path = os.path.join('uploads', filename)
-    text = read_text_from_pdf(file_path) if filename.endswith('.pdf') else read_text_from_docx(file_path) if filename.endswith('.docx') else read_text_from_txt(file_path) if filename.endswith('.txt') else read_text_from_pptx(file_path)
-
-    document_category = classify_document(text)
-    if not document_category:
-        return "Access Denied: Document not related to any relevant categories (e.g., health, crime, finance, legal, education)."
+    text = read_text_from_pdf(file_path) if filename.endswith('.pdf') else \
+           read_text_from_docx(file_path) if filename.endswith('.docx') else \
+           read_text_from_txt(file_path) if filename.endswith('.txt') else \
+           read_text_from_pptx(file_path)
 
     summary = summarize_text_to_10_lines(text)
 
@@ -175,8 +139,8 @@ def summarize_route(filename):
         translated_summary = translator.translate(summary, dest=target_lang).text
         return render_template('result.html', results=[("Translated Summary", translated_summary)], filename=filename)
 
-    return render_template('summary.html', summary=summary, filename=filename)
+    return render_template('summary.html', summary=summary)
 
 if __name__ == '__main__':
     os.makedirs('uploads', exist_ok=True)
-    app.run(debug=True)
+    app.run(debug=True, port=4000)
