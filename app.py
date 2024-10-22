@@ -199,22 +199,14 @@ def summarize_route(filename):
     title = generate_title(text)
     summary = summarize_overall_content(text, num_sentences=5)
 
-    # Initialize the translations list in a dictionary
-    if 'translations' not in app.config:
-        app.config['translations'] = {}
-
-    # Store translations for each file by filename
-    if filename not in app.config['translations']:
-        app.config['translations'][filename] = []
+    translated_summary = None  # Initialize translated summary variable
 
     if request.method == 'POST':
         target_lang = request.form['language']
-        translated_summary = translate_text(summary, target_lang)
-        app.config['translations'][filename].append(translated_summary)  # Store the translation
-        return redirect(url_for('summarize_route', filename=filename))
+        translated_summary = translate_text(summary, target_lang)  # Translate on form submission
 
-    translations = app.config['translations'][filename]
-    return render_template('summary.html', title=title, summary=summary, translations=translations)
+    return render_template('summary.html', title=title, summary=summary, translated_summary=translated_summary)
+
 
 
 if __name__ == '__main__':

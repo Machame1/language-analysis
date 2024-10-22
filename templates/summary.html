@@ -14,24 +14,19 @@
     <!-- Form to translate the summary -->
     <form method="POST">
         <label for="language">Select Language:</label>
-        <select name="language" id="language" required>
+        <select name="language" id="language">
             <option value="fr">French</option>
             <option value="es">Spanish</option>
             <option value="de">German</option>
             <option value="it">Italian</option>
             <option value="te">Telugu</option>
-            <!-- Add more languages as needed -->
         </select>
         <button type="submit">Translate Summary</button>
     </form>
-
-    {% if translations %}
-        <h2>Translated Summaries:</h2>
-        <ul>
-            {% for translation in translations %}
-                <li>{{ translation }}</li>
-            {% endfor %}
-        </ul>
+    
+    {% if translated_summary %}
+    <h2>Translated Summary:</h2>
+    <p>{{ translated_summary }}</p>
     {% endif %}
 
     <a href="{{ url_for('index') }}">Upload Another File</a>
