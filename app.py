@@ -5,14 +5,53 @@ import PyPDF2
 import docx
 from textblob import TextBlob
 import nltk
-from googletrans import Translator
+from deep_translator import GoogleTranslator  # Import deep-translator
+
 from pptx import Presentation
+from collections import defaultdict
+from nltk.corpus import stopwords
 
 nltk.download('punkt')
 nltk.download('stopwords')
 
 app = Flask(__name__)
-translator = Translator()
+
+import nltk
+from nltk.corpus import stopwords
+from collections import Counter
+
+
+def translate_text(text, target_lang):
+    """Translate text using deep-translator."""
+    try:
+        translated_text = GoogleTranslator(source='auto', target=target_lang).translate(text)
+        return translated_text
+    except Exception as e:
+        return str(e)
+
+def generate_title(text):
+    # Tokenize the text into words
+    words = nltk.word_tokenize(text.lower())
+    
+    # Filter out stop words and non-alphanumeric words
+    stop_words = set(stopwords.words('english'))
+    filtered_words = [word for word in words if word.isalnum() and word not in stop_words]
+
+    # Count word frequencies
+    word_counts = Counter(filtered_words)
+    
+    # Get the most common words
+    most_common = word_counts.most_common(3)
+    
+    # Generate a title from the most common words
+    if most_common:
+        title = ' '.join([word for word, _ in most_common]).title()
+    else:
+        title = "Untitled Document"
+
+    return title
+
+
 
 def read_text_from_pdf(file_path):
     text = ''
@@ -50,9 +89,33 @@ def overall_sentiment(text):
     polarity = analysis.sentiment.polarity
     return 'Positive' if polarity > 0 else 'Negative' if polarity < 0 else 'Neutral'
 
-def summarize_text_to_10_lines(text):
+def summarize_overall_content(text, num_sentences=3):
+    # Split the text into sentences
     sentences = nltk.sent_tokenize(text)
-    return " ".join(sentences[:10])  # Summarize to first 10 lines
+
+    # Create a frequency distribution of words
+    word_frequencies = defaultdict(int)
+    stop_words = set(stopwords.words('english'))
+
+    for word in nltk.word_tokenize(text.lower()):
+        if word.isalnum() and word not in stop_words:
+            word_frequencies[word] += 1
+
+    # Score sentences based on the frequency of words
+    sentence_scores = defaultdict(int)
+    for sentence in sentences:
+        for word in nltk.word_tokenize(sentence.lower()):
+            if word in word_frequencies:
+                sentence_scores[sentence] += word_frequencies[word]
+
+    # Select the top N sentences to form the summary
+    summarized_sentences = sorted(sentence_scores, key=sentence_scores.get, reverse=True)[:num_sentences]
+
+    # Create a summary by combining the selected sentences
+    summary = ' '.join(summarized_sentences)
+    
+    return summary
+
 
 @app.route('/')
 def index():
@@ -122,7 +185,8 @@ def remove_noise_route(filename):
     return render_template('result.html', 
                            results=[("Cleaned Text Sentiment", sentiment_label)],
                            filename=filename,   
-                           cleaned_content=cleaned_text,)
+                           cleaned_content=cleaned_text
+                           )
 
 @app.route('/summary/<filename>', methods=['GET', 'POST'])
 def summarize_route(filename):
@@ -132,14 +196,18 @@ def summarize_route(filename):
            read_text_from_txt(file_path) if filename.endswith('.txt') else \
            read_text_from_pptx(file_path)
 
-    summary = summarize_text_to_10_lines(text)
+    title = generate_title(text)
+    summary = summarize_overall_content(text, num_sentences=5)
+
+    translated_summary = None  # Initialize translated summary variable
 
     if request.method == 'POST':
         target_lang = request.form['language']
-        translated_summary = translator.translate(summary, dest=target_lang).text
-        return render_template('result.html', results=[("Translated Summary", translated_summary)], filename=filename)
+        translated_summary = translate_text(summary, target_lang)  # Translate on form submission
 
-    return render_template('summary.html', summary=summary)
+    return render_template('summary.html', title=title, summary=summary, translated_summary=translated_summary)
+
+
 
 if __name__ == '__main__':
     os.makedirs('uploads', exist_ok=True)
