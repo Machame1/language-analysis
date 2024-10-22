@@ -6,14 +6,8 @@
     <title>Analysis Result</title>
     <style>
         .hidden { display: none; }
-        
-        .content-container {
-            display: flex;
-            justify-content: space-between;
-        }
-        .content {
-            width: 45%;
-        }
+        .content-container { display: flex; justify-content: space-between; }
+        .content { width: 45%; }
     </style>
 </head>
 <body>
@@ -24,32 +18,38 @@
     <p>{{ value }}</p>
     {% endfor %}
 
+    <h2>Original Content</h2>
+    <pre>{{ initial_content }}</pre>
+    {% if remaining_content %}
+        <div>
+            <button id="moreButton" onclick="toggleContent('moreButton', 'moreContent')">Show More</button>
+            <pre id="moreContent" class="hidden">{{ remaining_content }}</pre>
+        </div>
+    {% endif %}
+
     {% if cleaned_content %}
     <div class="content">
         <h3>Cleaned Content</h3>
-        <pre>{{ cleaned_content }}</pre>
+        <pre>{{ cleaned_content[:300] }}</pre>
+        {% if cleaned_content|length > 300 %}
+            <div>
+                <button id="cleanedMoreButton" onclick="toggleContent('cleanedMoreButton', 'cleanedMoreContent')">Show More</button>
+                <pre id="cleanedMoreContent" class="hidden">{{ cleaned_content[300:] }}</pre>
+            </div>
+        {% endif %}
     </div>
     {% endif %}
-
-    <h2>Original Content</h2>
-    <pre>{{ original_content }}</pre>
-
-    <h2>Initial Content</h2>
-    <pre>{{ initial_content }}</pre>
-
-    {% if remaining_content %}
-        <button id="moreButton">Show More</button>
-        <pre id="moreContent" class="hidden">{{ remaining_content }}</pre>
-    {% endif %}
+    
 
     <a href="{{ url_for('upload_success', filename=filename) }}">Go Back to Actions</a>
 
     <script>
-        document.getElementById('moreButton').onclick = function() {
-            const moreContent = document.getElementById('moreContent');
-            moreContent.classList.toggle('hidden');
-            this.textContent = moreContent.classList.contains('hidden') ? 'Show More' : 'Show Less';
-        };
+        function toggleContent(buttonId, contentId) {
+            const button = document.getElementById(buttonId);
+            const content = document.getElementById(contentId);
+            content.classList.toggle('hidden');
+            button.textContent = content.classList.contains('hidden') ? 'Show More' : 'Show Less';
+        }
     </script>
 </body>
 </html>
