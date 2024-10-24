@@ -6,16 +6,85 @@
     <title>File Uploaded Successfully</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
         }
         h1 {
             color: #4CAF50;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
         }
-        .hidden { display: none; }
+        h2 {
+            color: #555;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        h3 {
+            font-size: 1.6rem;
+            margin-top: 30px;
+            color: #333;
+        }
+        pre {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            overflow: auto;
+            max-height: 200px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        a {
+            text-decoration: none;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        a:hover {
+            background-color: #45a049;
+        }
+        p a {
+            background-color: #f1f1f1;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+        }
+        p a:hover {
+            background-color: #ddd;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
+
     <h1>File Uploaded: {{ filename }}</h1>
 
     <h2>Content</h2>
